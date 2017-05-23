@@ -30,10 +30,10 @@ class AppAssist: NSObject {
         super.init()
         
         // Добавляем KVO обозреватель изменения количества операций в параллельном потоке
-        parseQueue.addObserver(self, forKeyPath: "operations.count", options: .new, context: nil)
+        parseQueue.addObserver(self, forKeyPath: "operations", options: .new, context: nil)
                 
         // Для экономии аппаратных ресурсов выполняем в параллельным потоке одновременно только одну операцию загрузки данных
-        parseQueue.maxConcurrentOperationCount = 1
+        parseQueue.maxConcurrentOperationCount = 5
     }
     
     deinit {
@@ -44,7 +44,11 @@ class AppAssist: NSObject {
     
     /// Функция обработки KVO
     override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        if object as? OperationQueue == parseQueue && keyPath == "operations.count" && parseQueue.operations.count == 0 {
+        
+        // Проверяем количесвто операций в параллельном потоке
+        if object as? OperationQueue == parseQueue && keyPath == "operations" && parseQueue.operations.count == 0 {
+            
+            // Публикуем уведомление о завершении выполнения всех операций
             NotificationCenter.default.post(name: AppDefaults.Notifications.ParseOperation.didParseAllFeeds, object: nil)
         }
     }
@@ -54,15 +58,12 @@ class AppAssist: NSObject {
         
         // Конфигурируем запрос к базе данных, который должен вернуть только ссылки на существующие каналы
         let fetchRequest: NSFetchRequest<NSFetchRequestResult> = RssFeed.fetchRequest()
-        fetchRequest.resultType = .dictionaryResultType
-        fetchRequest.returnsDistinctResults = true
-        fetchRequest.propertiesToFetch = ["feedLink"]
         
         // Запрашиваем базу данных
-        if let result = try? managedObjectContext.fetch(fetchRequest), let objects = result  as? [[String: String]] {
+        if let result = try? managedObjectContext.fetch(fetchRequest), let objects = result as? [RssFeed] {
             
             // Получаем ссылки на существующие каналы
-            let feedsLinks = objects.flatMap{ $0["feedLink"] }
+            let feedsLinks = objects.flatMap{ $0.feedLink }
             
             // Обновляем каждый существующий канал
             for feedLink in feedsLinks {

@@ -62,6 +62,8 @@ class FeedParseOperation: Operation, XMLParserDelegate {
     
     deinit {
         
+        AppAssist.log(self, function: #function, message: "")
+        
         // Удаляем обозреватели уведомлений
         NotificationCenter.default.removeObserver(self)
     }
@@ -87,6 +89,13 @@ class FeedParseOperation: Operation, XMLParserDelegate {
                     updateBase()
                 }
             }
+        }
+        
+        // Переходим в главный поток
+        DispatchQueue.main.async() { _ in
+            
+            // Публикуем уведомление о завершении загрузки данных с канала вместе с полученными данными
+            NotificationCenter.default.post(name: AppDefaults.Notifications.ParseOperation.didParse, object: nil, userInfo: ["operationName": self.name!])
         }
     }
     
@@ -181,9 +190,6 @@ class FeedParseOperation: Operation, XMLParserDelegate {
             
             // Объединяем контекст операции и главный контекст
             AppAssist.shared.managedObjectContext.mergeChanges(fromContextDidSave: notification)
-            
-            // Публикуем уведомление о завершении загрузки данных с канала вместе с полученными данными
-            NotificationCenter.default.post(name: AppDefaults.Notifications.ParseOperation.didParse, object: nil, userInfo: ["operationName": self.name!])
         }
     }
     

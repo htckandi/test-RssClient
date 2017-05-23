@@ -1,39 +1,34 @@
 //
-//  FeedsViewController.swift
+//  ItemsViewController.swift
 //  test-RssClient
 //
-//  Created by Сергей Табунщиков on 13.05.17.
+//  Created by Сергей Табунщиков on 22.05.17.
 //  Copyright © 2017 Sergey Tabunshikov. All rights reserved.
 //
 
 import UIKit
 import CoreData
 
-class FeedsViewController: UITableViewController, NSFetchedResultsControllerDelegate {
+class ItemsViewController: UITableViewController, NSFetchedResultsControllerDelegate {
     
     // Контекст базы данных
     let managedObjectContext = AppAssist.shared.managedObjectContext
     
     // Контроллер базы данных
-    var _fetchedResultsController: NSFetchedResultsController<RssFeed>?
-
+    var _fetchedResultsController: NSFetchedResultsController<RssItem>?
+    
+    // Текущий канал
+    var rssFeed: RssFeed!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         // Добавляем обозреватели уведомлений об этапах выполнения операции загрузки канала
-        NotificationCenter.default.addObserver(self, selector: #selector(parserDidParseFeed(notification:)), name: AppDefaults.Notifications.ParseOperation.didParseAllFeeds, object: nil)
-        
+        NotificationCenter.default.addObserver(self, selector: #selector(parserDidParseFeed(notification:)), name: AppDefaults.Notifications.ParseOperation.didParse, object: nil)
+
         // Конфигурируем таблицу
         tableView.estimatedRowHeight = 44
         tableView.rowHeight = UITableViewAutomaticDimension
-        
-        // Добавляем тестовые каналы
-        AppAssist.shared.parseFeed(URL(string: "https://news.rambler.ru/rss/head/")!)
-        AppAssist.shared.parseFeed(URL(string: "https://news.yandex.ru/index.rss")!)
-        AppAssist.shared.parseFeed(URL(string: "https://news.rambler.ru/rss/world/")!)
-        AppAssist.shared.parseFeed(URL(string: "https://lenta.ru/rss")!)
-        AppAssist.shared.parseFeed(URL(string: "https://news.yandex.ru/gadgets.rss")!)
-       // AppAssist.shared.parseFeed(URL(string: "http://feeds.bbci.co.uk/news/rss.xml")!)
     }
     
     deinit {
@@ -45,41 +40,32 @@ class FeedsViewController: UITableViewController, NSFetchedResultsControllerDele
     /// Обрабатываем уведомление о завершении операции загрузки данных с канала
     func parserDidParseFeed (notification: Notification) {
         
-        // Проверяем наличие идикатора обновления на экране
-        if refreshControl?.isRefreshing == true {
+        // Проверяем завершение операции обновления текущего канала
+        // Проверяем отображение индикатора обновления
+        if notification.userInfo?["operationName"] as? String == rssFeed.feedLink! && refreshControl?.isRefreshing == true {
             
             // Скрываем индикатор обновления
             refreshControl?.endRefreshing()
-            
-            // Разблокируем интерфейс пользователя
-            tableView.isUserInteractionEnabled = true
         }
     }
     
-    // Функция обработки принудительного обновления существующих каналов
     @IBAction func handleRefreshControl(_ sender: Any) {
         
-        // Блокируем интерфейс пользователя
-        tableView.isUserInteractionEnabled = false
-        
-        // Обновляем все существующие каналы
-        AppAssist.shared.updateFeeds()
+        // Обновляем текущий канал
+        AppAssist.shared.parseFeed(URL(string: rssFeed.feedLink!)!)
     }
-
+    
     // MARK: - Table view data source
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return fetchedResultsController.fetchedObjects?.count ?? 0
     }
 
-    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
-        let cell = tableView.dequeueReusableCell(withIdentifier: "FeedsCell", for: indexPath) as! FeedsViewCell
-        cell.rssFeed = fetchedResultsController.object(at: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ItemsCell", for: indexPath) as! ItemsViewCell
+        cell.rssItem = fetchedResultsController.object(at: indexPath)
         return cell
     }
-    
 
     /*
     // Override to support conditional editing of the table view.
@@ -116,27 +102,26 @@ class FeedsViewController: UITableViewController, NSFetchedResultsControllerDele
     }
     */
 
-    
+    /*
     // MARK: - Navigation
 
     // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        
-        if let controller = segue.destination as? ItemsViewController, let indexPath = tableView.indexPathForSelectedRow {
-            controller.rssFeed = fetchedResultsController.object(at: indexPath)
-        }
+        // Get the new view controller using segue.destinationViewController.
+        // Pass the selected object to the new view controller.
     }
- 
-    
+    */
+
     // MARK: - Fetched results controller
     
-    var fetchedResultsController: NSFetchedResultsController<RssFeed> {
+    var fetchedResultsController: NSFetchedResultsController<RssItem> {
         
         if _fetchedResultsController != nil { return _fetchedResultsController! }
         
-        let fetchRequest: NSFetchRequest<RssFeed> = RssFeed.fetchRequest()
+        let fetchRequest: NSFetchRequest<RssItem> = RssItem.fetchRequest()
         fetchRequest.fetchBatchSize = 20
-        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "feedTitle", ascending: true)]
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "itemPubDate", ascending: false)]
+        fetchRequest.predicate = NSPredicate(format: "itemFeed == %@", rssFeed)
         
         let aFetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: managedObjectContext, sectionNameKeyPath: nil, cacheName: nil)
         aFetchedResultsController.delegate = self
