@@ -8,6 +8,7 @@
 
 import UIKit
 import CoreData
+import SafariServices
 
 class ItemsViewController: UITableViewController, NSFetchedResultsControllerDelegate {
     
@@ -66,6 +67,23 @@ class ItemsViewController: UITableViewController, NSFetchedResultsControllerDele
         cell.rssItem = fetchedResultsController.object(at: indexPath)
         return cell
     }
+    
+    
+    // MARK: - Table view delegate
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
+        // Получаем объект элемента канала
+        let object = fetchedResultsController.object(at: indexPath)
+        
+        // Проверяем наличие ссылки в элементе канала
+        if let objectLink = object.itemLink, let objectURL = URL(string: objectLink) {
+            
+            // Открываем Safari с указанной ссылкой
+            let safariController = SFSafariViewController(url: objectURL)
+            present(safariController, animated: true, completion: nil)
+        }
+    }
 
     /*
     // Override to support conditional editing of the table view.
@@ -75,17 +93,15 @@ class ItemsViewController: UITableViewController, NSFetchedResultsControllerDele
     }
     */
 
-    /*
     // Override to support editing the table view.
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+        
         if editingStyle == .delete {
-            // Delete the row from the data source
-            tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
+            
+            // Удаляем элемент канала из базы данных
+            managedObjectContext.delete(fetchedResultsController.object(at: indexPath))
+        }
     }
-    */
 
     /*
     // Override to support rearranging the table view.

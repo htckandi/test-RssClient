@@ -114,22 +114,29 @@ class FeedParseOperation: Operation, XMLParserDelegate {
     /// Осуществляет поиск в базе данных необходимого канала
     func searchForFeed () -> RssFeed? {
         
+        // Готовим запрос к базе данных
         let fetchRequest: NSFetchRequest<RssFeed> = RssFeed.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "feedLink == %@", _operationFeed.feedLink!)
+        fetchRequest.predicate = NSPredicate(format: "feedLink == %@", name!)
         
+        // Ищем подобный канал в базе данных
         if let object = try? _operationMoc.fetch(fetchRequest).first {
+            
+            // Канал найден
             return object
         }
         
+        // Канал не найден
         return nil
     }
     
     /// Создаёт в базе данных новый канал
     func insertNewFeed () -> RssFeed {
         
+        // Вносим в базу данных новый канал
         let feedEntity = RssFeed(context: _operationMoc)
-        feedEntity.feedLink = _operationFeed.feedLink
+        feedEntity.feedLink = name
         
+        // Возвращаем новый канал
         return feedEntity
     }
     
@@ -241,8 +248,6 @@ class FeedParseOperation: Operation, XMLParserDelegate {
                     objectRssFeed.feedTitle = rssString.trimmed
                 case "description":
                     objectRssFeed.feedDescription = rssString.trimmed
-                case "link":
-                    objectRssFeed.feedLink = rssString.trimmed
                 default:
                     break
                 }

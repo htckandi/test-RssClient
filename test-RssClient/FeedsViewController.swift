@@ -33,13 +33,57 @@ class FeedsViewController: UITableViewController, NSFetchedResultsControllerDele
         AppAssist.shared.parseFeed(URL(string: "https://news.rambler.ru/rss/world/")!)
         AppAssist.shared.parseFeed(URL(string: "https://lenta.ru/rss")!)
         AppAssist.shared.parseFeed(URL(string: "https://news.yandex.ru/gadgets.rss")!)
-       // AppAssist.shared.parseFeed(URL(string: "http://feeds.bbci.co.uk/news/rss.xml")!)
     }
     
     deinit {
         
         // Удаляем обозреватели уведомлений
         NotificationCenter.default.removeObserver(self)
+    }
+    
+    /// Функция добавления нового канала из буфера обмена
+    @IBAction func addNewFeed(_ sender: UIBarButtonItem) {
+        
+        // Проверяем наличие ссылки в буфере обмена
+        if let objectLink = UIPasteboard.general.string, let objectUrl = URL(string: objectLink) {
+            
+            // Буфер обмена содержит корректную ссылку
+            // Готовим запрос к базе данных
+            let fetchRequest: NSFetchRequest<RssFeed> = RssFeed.fetchRequest()
+            fetchRequest.predicate = NSPredicate(format: "feedLink == %@", objectUrl.absoluteString)
+            
+            // Проверяем наличие подобного канала в базе данных
+            if let object = try? managedObjectContext.count(for: fetchRequest), object == 0 {
+                
+                // Подобного канала нет в базе данных
+                // Готовим информационный контроллер с запросом на добавление канала
+                let alertController = UIAlertController(title: nil, message: "Pasteboard contains link", preferredStyle: .alert)
+                alertController.addAction(UIAlertAction(title: "Add feed", style: .default, handler: { _ in AppAssist.shared.parseFeed(objectUrl) }))
+                
+                // Отображаем информационный контроллер
+                present(alertController, animated: true, completion: nil)
+                
+            } else {
+                
+                // Подобного канала нет в базе данных
+                // Готовим информационный контроллер с сообщением о существовании подобного канала в базе данных
+                let alertController = UIAlertController(title: nil, message: "Such feed exists", preferredStyle: .alert)
+                alertController.addAction(UIAlertAction(title: "Ok", style: .default, handler: nil))
+                
+                // Отображаем информационный контроллер
+                present(alertController, animated: true, completion: nil)
+            }
+            
+        } else {
+            
+            // Буфер обмена не содержит корректную ссылку
+            // Готовим информационный контроллер с сообщением об отсутствии в буфере обмена корректной ссылки
+            let alertController = UIAlertController(title: nil, message: "There is no link in pasteboard\nCopy RSS link to pasteboard and try again", preferredStyle: .alert)
+            alertController.addAction(UIAlertAction(title: "Ok", style: .default, handler: nil))
+            
+            // Отображаем информационный контроллер
+            present(alertController, animated: true, completion: nil)
+        }
     }
     
     /// Обрабатываем уведомление о завершении операции загрузки данных с канала
@@ -89,17 +133,17 @@ class FeedsViewController: UITableViewController, NSFetchedResultsControllerDele
     }
     */
 
-    /*
+    
     // Override to support editing the table view.
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+        
         if editingStyle == .delete {
-            // Delete the row from the data source
-            tableView.deleteRows(at: [indexPath], with: .fade)
-        } else if editingStyle == .insert {
-            // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
-        }    
+            
+            // Удаляем канал из базы данных
+            managedObjectContext.delete(fetchedResultsController.object(at: indexPath))
+        }
     }
-    */
+    
 
     /*
     // Override to support rearranging the table view.

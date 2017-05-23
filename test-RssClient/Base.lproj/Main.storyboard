@@ -72,9 +72,14 @@
                         </connections>
                     </tableView>
                     <navigationItem key="navigationItem" title="RssClient" id="ZiZ-PH-oBj">
-                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="sor-u0-Zgs"/>
+                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="sor-u0-Zgs">
+                            <connections>
+                                <action selector="addNewFeed:" destination="KVY-zr-kPG" id="cSr-Ux-alX"/>
+                            </connections>
+                        </barButtonItem>
                     </navigationItem>
                     <refreshControl key="refreshControl" opaque="NO" multipleTouchEnabled="YES" contentMode="center" enabled="NO" contentHorizontalAlignment="center" contentVerticalAlignment="center" id="etp-lZ-uM5">
+                        <rect key="frame" x="0.0" y="0.0" width="1000" height="1000"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <connections>
                             <action selector="handleRefreshControl:" destination="KVY-zr-kPG" eventType="valueChanged" id="6NM-R9-1H3"/>
@@ -89,7 +94,7 @@
         <scene sceneID="ahI-8u-21V">
             <objects>
                 <tableViewController id="uia-OB-eKa" customClass="ItemsViewController" customModule="test_RssClient" customModuleProvider="target" sceneMemberID="viewController">
-                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" allowsSelection="NO" rowHeight="142" sectionHeaderHeight="28" sectionFooterHeight="28" id="x97-JS-eKC">
+                    <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="142" sectionHeaderHeight="28" sectionFooterHeight="28" id="x97-JS-eKC">
                         <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
@@ -146,6 +151,7 @@
                         </connections>
                     </tableView>
                     <refreshControl key="refreshControl" opaque="NO" multipleTouchEnabled="YES" contentMode="center" enabled="NO" contentHorizontalAlignment="center" contentVerticalAlignment="center" id="TOc-pE-0Gy">
+                        <rect key="frame" x="0.0" y="0.0" width="1000" height="1000"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <connections>
                             <action selector="handleRefreshControl:" destination="uia-OB-eKa" eventType="valueChanged" id="Jw2-Bx-itY"/>
