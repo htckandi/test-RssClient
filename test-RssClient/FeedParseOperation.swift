@@ -62,8 +62,6 @@ class FeedParseOperation: Operation, XMLParserDelegate {
     
     deinit {
         
-        AppAssist.log(self, function: #function, message: "")
-        
         // Удаляем обозреватели уведомлений
         NotificationCenter.default.removeObserver(self)
     }

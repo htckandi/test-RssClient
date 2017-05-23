@@ -32,7 +32,7 @@ class AppAssist: NSObject {
         // Добавляем KVO обозреватель изменения количества операций в параллельном потоке
         parseQueue.addObserver(self, forKeyPath: "operations", options: .new, context: nil)
                 
-        // Для экономии аппаратных ресурсов выполняем в параллельным потоке одновременно только одну операцию загрузки данных
+        // Ограничиваем количество одновременно выполныемых операций
         parseQueue.maxConcurrentOperationCount = 5
     }
     
