@@ -16,7 +16,6 @@ struct AppDefaults {
             
             static let willParseFeed = Notification.Name("ParseOperationWillParseFeedNotification")
             static let didParseFeed = Notification.Name("ParseOperationDidParseFeedNotification")
-            static let didParseAllFeeds = Notification.Name("ParseOperationDidParseAllFeedsNotification")
         }
     }
 }

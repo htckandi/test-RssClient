@@ -20,9 +20,6 @@ class FeedsViewController: UITableViewController, NSFetchedResultsControllerDele
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Добавляем обозреватели уведомлений об этапах выполнения операции загрузки канала
-        NotificationCenter.default.addObserver(self, selector: #selector(parserDidParseFeed(notification:)), name: AppDefaults.Notifications.ParseOperation.didParseAllFeeds, object: nil)
-        
         // Конфигурируем таблицу
         tableView.estimatedRowHeight = 44
         tableView.rowHeight = UITableViewAutomaticDimension
@@ -86,28 +83,18 @@ class FeedsViewController: UITableViewController, NSFetchedResultsControllerDele
         }
     }
     
-    /// Обрабатываем уведомление о завершении операции загрузки данных с канала
-    func parserDidParseFeed (notification: Notification) {
-        
-        // Проверяем наличие идикатора обновления на экране
-        if refreshControl?.isRefreshing == true {
-            
-            // Скрываем индикатор обновления
-            refreshControl?.endRefreshing()
-            
-            // Разблокируем интерфейс пользователя
-            tableView.isUserInteractionEnabled = true
-        }
-    }
-    
     // Принудительное обновление существующих каналов пользователем
     @IBAction func handleRefreshControl(_ sender: Any) {
         
-        // Блокируем интерфейс пользователя
-        tableView.isUserInteractionEnabled = false
-        
         // Обновляем все существующие каналы
         AppAssist.shared.updateFeeds()
+        
+        // Создаём задержку главного потока исключительно с целью эффекта задержки интерфейса пользователя
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1), execute: {
+            
+            // Скрываем индикатор обновления
+            self.refreshControl?.endRefreshing()
+        })
     }
 
     // MARK: - Table view data source

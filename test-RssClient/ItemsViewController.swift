@@ -24,30 +24,9 @@ class ItemsViewController: UITableViewController, NSFetchedResultsControllerDele
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Добавляем обозреватели уведомлений об этапах выполнения операции обработки канала
-        NotificationCenter.default.addObserver(self, selector: #selector(parserDidParseFeed(notification:)), name: AppDefaults.Notifications.ParseOperation.didParseFeed, object: nil)
-
         // Конфигурируем таблицу
         tableView.estimatedRowHeight = 44
         tableView.rowHeight = UITableViewAutomaticDimension
-    }
-    
-    deinit {
-        
-        // Удаляем обозреватели уведомлений
-        NotificationCenter.default.removeObserver(self)
-    }
-    
-    /// Обрабатываем уведомление о завершении операции обработки канала
-    func parserDidParseFeed (notification: Notification) {
-        
-        // Проверяем завершение операции обработки текущего канала
-        // Проверяем отображение индикатора обновления
-        if notification.userInfo?["operationName"] as? String == rssFeed.feedLink! && refreshControl?.isRefreshing == true {
-            
-            // Скрываем индикатор обновления
-            refreshControl?.endRefreshing()
-        }
     }
     
     /// Принудительное обновление текущего канала пользователем
@@ -55,6 +34,13 @@ class ItemsViewController: UITableViewController, NSFetchedResultsControllerDele
         
         // Обновляем текущий канал
         AppAssist.shared.parseFeed(URL(string: rssFeed.feedLink!)!)
+        
+        // Создаём задержку главного потока исключительно с целью эффекта задержки интерфейса пользователя
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(1), execute: {
+            
+            // Скрываем индикатор обновления
+            self.refreshControl?.endRefreshing()
+        })
     }
     
     // MARK: - Table view data source
