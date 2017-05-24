@@ -14,8 +14,8 @@ struct AppDefaults {
         
         struct ParseOperation {
             
-            static let willParse = Notification.Name("ParseOperationWillParseNotification")
-            static let didParse = Notification.Name("ParseOperationDidParseNotification")
+            static let willParseFeed = Notification.Name("ParseOperationWillParseFeedNotification")
+            static let didParseFeed = Notification.Name("ParseOperationDidParseFeedNotification")
             static let didParseAllFeeds = Notification.Name("ParseOperationDidParseAllFeedsNotification")
         }
     }

@@ -31,45 +31,52 @@ class FeedParseOperation: Operation, XMLParserDelegate {
     }
     
     /// Ссылка на канал
-    var feedURL: URL
-    
-    /// Обрабатываемый элемент канала
-    var itemObject: ItemObject?
+    var feedUrl: URL
     
     /// Обрабатываемый канал
     var feedObject: FeedObject?
     
-    /// Текст при обработке канала
-    var rssString = ""
+    /// Обрабатываемый элемент канала
+    var itemObject: ItemObject?
     
-    /// Временный обрабатываемый канал
+    /// Обрабатываемый текст
+    var objectString = ""
+    
+    /// Обработанный канал
     lazy var _operationFeed = FeedObject()
     
-    /// Временный контекст базы данных
+    /// Параллельный контекст базы данных
     lazy var _operationMoc = NSManagedObjectContext(concurrencyType: .privateQueueConcurrencyType)
     
     
     init(_ defaultFeedUrl: URL) {
         
         // Сохраняем ссылку на канал
-        feedURL = defaultFeedUrl
+        feedUrl = defaultFeedUrl
         
         super.init()
         
         // Сохраняем в качестве имени операции ссулку на канал с целью возможности дальнейшего поиска
-        name = feedURL.absoluteString
-    }
-    
-    deinit {
+        name = feedUrl.absoluteString
         
-        // Удаляем обозреватели уведомлений
-        NotificationCenter.default.removeObserver(self)
+        // Переходим в главный поток
+        DispatchQueue.main.async() { _ in
+            
+            // Публикуем уведомление о начале обработки канала
+            NotificationCenter.default.post(name: AppDefaults.Notifications.ParseOperation.willParseFeed, object: nil, userInfo: ["operationName": self.name!])
+        }
     }
     
     override func main() {
         
+        // Отображаем индикатор активности сети
+        UIApplication.shared.isNetworkActivityIndicatorVisible = true
+        
         // Проверяем возможность создания парсера
-        if let xmlParser = XMLParser(contentsOf: feedURL) {
+        if let xmlParser = XMLParser(contentsOf: feedUrl) {
+            
+            // Скрываем индикатор активности сети
+            UIApplication.shared.isNetworkActivityIndicatorVisible = false
             
             // Конфигурируем парсер
             xmlParser.delegate = self
@@ -87,20 +94,24 @@ class FeedParseOperation: Operation, XMLParserDelegate {
                     updateBase()
                 }
             }
+        } else {
+         
+            // Скрываем индикатор активности сети
+            UIApplication.shared.isNetworkActivityIndicatorVisible = false
         }
         
         // Переходим в главный поток
         DispatchQueue.main.async() { _ in
             
-            // Публикуем уведомление о завершении загрузки данных с канала вместе с полученными данными
-            NotificationCenter.default.post(name: AppDefaults.Notifications.ParseOperation.didParse, object: nil, userInfo: ["operationName": self.name!])
+            // Публикуем уведомление о завершении обработки канала
+            NotificationCenter.default.post(name: AppDefaults.Notifications.ParseOperation.didParseFeed, object: nil, userInfo: ["operationName": self.name!])
         }
     }
     
     
     // MARK: - Core Data
     
-    /// Обновляем базу данных
+    /// Обновляет базу данных
     func updateBase() {
         
         // Конфигурируем контекст
@@ -111,7 +122,7 @@ class FeedParseOperation: Operation, XMLParserDelegate {
         updateFeed(searchForFeed() ?? insertNewFeed())
     }
     
-    /// Осуществляет поиск в базе данных необходимого канала
+    /// Осуществляет поиск необходимого канала в контексте
     func searchForFeed () -> RssFeed? {
         
         // Готовим запрос к базе данных
@@ -119,7 +130,7 @@ class FeedParseOperation: Operation, XMLParserDelegate {
         fetchRequest.predicate = NSPredicate(format: "feedLink == %@", name!)
         
         // Ищем подобный канал в базе данных
-        if let object = try? _operationMoc.fetch(fetchRequest).first {
+        if let objects = try? _operationMoc.fetch(fetchRequest), let object = objects.first {
             
             // Канал найден
             return object
@@ -129,38 +140,39 @@ class FeedParseOperation: Operation, XMLParserDelegate {
         return nil
     }
     
-    /// Создаёт в базе данных новый канал
+    /// Создаёт новый канал в контексте
     func insertNewFeed () -> RssFeed {
         
-        // Вносим в базу данных новый канал
-        let feedEntity = RssFeed(context: _operationMoc)
-        feedEntity.feedLink = name
+        // Вносим в контекст новый канал
+        let newFeed = RssFeed(context: _operationMoc)
+        newFeed.feedLink = name
         
-        // Возвращаем новый канал
-        return feedEntity
+        return newFeed
     }
     
-    /// Обновляет информацию канала в базе данных
+    /// Обновляет данные канала в контексте
     func updateFeed (_ rssFeed: RssFeed) {
         
         // Обновляем информацию канала
         rssFeed.feedDescription = _operationFeed.feedDescription
         rssFeed.feedTitle = _operationFeed.feedTitle
         
-        // Получаем наборы существующих и загруженных объектов новостей
+        // Готовим массивы существующих элементов канала
         let itemsEntities = Array(rssFeed.feedItems as? Set<RssItem> ?? Set<RssItem>())
+        
+        // Готовим массивы загруженных элементов канала
         let itemsObjects = _operationFeed.feedItems
         
-        // Получаем наборы ссылок на существующие и новые новости
+        // Готовим массив ссылок на существующие и новые элементы канала
         let itemsEntitiesLinks = itemsEntities.flatMap{ $0.itemLink }
         
-        // Готовим предикаты
+        // Готовим предикат
         let insertPredicate = NSPredicate(format: "NOT SELF.itemLink IN %@", itemsEntitiesLinks)
         
-        // Получаем фильтрованные массивы новостей
+        // Получаем новые элементы канала
         let itemsObjectsToInsert = itemsObjects.filter{ insertPredicate.evaluate(with: $0) }
         
-        // Добавляем новые новости
+        // Добавляем новые элементы канала в контекст
         for object in itemsObjectsToInsert {
             
             let itemEntity = RssItem(context: _operationMoc)
@@ -171,14 +183,14 @@ class FeedParseOperation: Operation, XMLParserDelegate {
             itemEntity.itemPubDate = object.itemPubDate?.internetDate as NSDate?
         }
         
-        // Добавляем обозреватель уведомления о завершении сохранения контекста
+        // Добавляем обозреватель уведомления о завершении сохранения параллельного контекста
         NotificationCenter.default.addObserver(self, selector: #selector(mocDidSave(notification:)), name: NSNotification.Name.NSManagedObjectContextDidSave, object: _operationMoc)
         
-        // Проверяем наличие зменений в контексте
+        // Проверяем наличие изменений в параллельном контексте
         if _operationMoc.hasChanges {
             do {
                 
-                // Сохраняем контекст
+                // Сохраняем параллельный контекст
                 try _operationMoc.save()
                 
             } catch {
@@ -187,13 +199,16 @@ class FeedParseOperation: Operation, XMLParserDelegate {
         }
     }
     
-    /// Функция обработки уведомления о завершении сохранения контекста
+    /// Обрабатывает уведомление о завершении сохранения параллельного контекста
     func mocDidSave(notification: Notification) {
+        
+        // Удаляем обозреватель уведомления о завершении сохранения параллельного контекста
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name.NSManagedObjectContextDidSave, object: _operationMoc)
         
         // Переходим в главный поток
         DispatchQueue.main.async() { _ in
             
-            // Объединяем контекст операции и главный контекст
+            // Объединяем параллельный и главный контексты
             AppAssist.shared.managedObjectContext.mergeChanges(fromContextDidSave: notification)
         }
     }
@@ -203,7 +218,7 @@ class FeedParseOperation: Operation, XMLParserDelegate {
     
     func parser(_ parser: XMLParser, didStartElement elementName: String, namespaceURI: String?, qualifiedName qName: String?, attributes attributeDict: [String : String] = [:]) {
         
-        rssString = ""
+        objectString = ""
         
         switch elementName {
         case "channel", "feed":
@@ -216,7 +231,7 @@ class FeedParseOperation: Operation, XMLParserDelegate {
     }
     
     func parser(_ parser: XMLParser, foundCharacters string: String) {
-        rssString.append(string)
+        objectString.append(string)
     }
     
     func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
@@ -230,13 +245,13 @@ class FeedParseOperation: Operation, XMLParserDelegate {
                     objectRssFeed.feedItems.append(objectRssItem)
                     itemObject = nil
                 case "title":
-                    objectRssItem.itemTitle = rssString.trimmed
+                    objectRssItem.itemTitle = objectString.trimmed
                 case "description":
-                    objectRssItem.itemDescription = rssString.trimmed
+                    objectRssItem.itemDescription = objectString.trimmed
                 case "link":
-                    objectRssItem.itemLink = rssString.trimmed
+                    objectRssItem.itemLink = objectString.trimmed
                 case "pubDate":
-                    objectRssItem.itemPubDate = rssString.trimmed
+                    objectRssItem.itemPubDate = objectString.trimmed
                 default:
                     break
                 }
@@ -245,9 +260,9 @@ class FeedParseOperation: Operation, XMLParserDelegate {
                 
                 switch elementName {
                 case "title":
-                    objectRssFeed.feedTitle = rssString.trimmed
+                    objectRssFeed.feedTitle = objectString.trimmed
                 case "description":
-                    objectRssFeed.feedDescription = rssString.trimmed
+                    objectRssFeed.feedDescription = objectString.trimmed
                 default:
                     break
                 }

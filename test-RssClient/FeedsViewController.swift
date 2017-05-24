@@ -100,7 +100,7 @@ class FeedsViewController: UITableViewController, NSFetchedResultsControllerDele
         }
     }
     
-    // Функция обработки принудительного обновления существующих каналов
+    // Принудительное обновление существующих каналов пользователем
     @IBAction func handleRefreshControl(_ sender: Any) {
         
         // Блокируем интерфейс пользователя

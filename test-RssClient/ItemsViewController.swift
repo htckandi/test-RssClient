@@ -12,10 +12,10 @@ import SafariServices
 
 class ItemsViewController: UITableViewController, NSFetchedResultsControllerDelegate {
     
-    // Контекст базы данных
+    // Главный контекст
     let managedObjectContext = AppAssist.shared.managedObjectContext
     
-    // Контроллер базы данных
+    // Контроллер контекста
     var _fetchedResultsController: NSFetchedResultsController<RssItem>?
     
     // Текущий канал
@@ -24,8 +24,8 @@ class ItemsViewController: UITableViewController, NSFetchedResultsControllerDele
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Добавляем обозреватели уведомлений об этапах выполнения операции загрузки канала
-        NotificationCenter.default.addObserver(self, selector: #selector(parserDidParseFeed(notification:)), name: AppDefaults.Notifications.ParseOperation.didParse, object: nil)
+        // Добавляем обозреватели уведомлений об этапах выполнения операции обработки канала
+        NotificationCenter.default.addObserver(self, selector: #selector(parserDidParseFeed(notification:)), name: AppDefaults.Notifications.ParseOperation.didParseFeed, object: nil)
 
         // Конфигурируем таблицу
         tableView.estimatedRowHeight = 44
@@ -38,10 +38,10 @@ class ItemsViewController: UITableViewController, NSFetchedResultsControllerDele
         NotificationCenter.default.removeObserver(self)
     }
     
-    /// Обрабатываем уведомление о завершении операции загрузки данных с канала
+    /// Обрабатываем уведомление о завершении операции обработки канала
     func parserDidParseFeed (notification: Notification) {
         
-        // Проверяем завершение операции обновления текущего канала
+        // Проверяем завершение операции обработки текущего канала
         // Проверяем отображение индикатора обновления
         if notification.userInfo?["operationName"] as? String == rssFeed.feedLink! && refreshControl?.isRefreshing == true {
             
@@ -50,6 +50,7 @@ class ItemsViewController: UITableViewController, NSFetchedResultsControllerDele
         }
     }
     
+    /// Принудительное обновление текущего канала пользователем
     @IBAction func handleRefreshControl(_ sender: Any) {
         
         // Обновляем текущий канал
@@ -98,7 +99,7 @@ class ItemsViewController: UITableViewController, NSFetchedResultsControllerDele
         
         if editingStyle == .delete {
             
-            // Удаляем элемент канала из базы данных
+            // Удаляем элемент канала из контекста
             managedObjectContext.delete(fetchedResultsController.object(at: indexPath))
         }
     }
