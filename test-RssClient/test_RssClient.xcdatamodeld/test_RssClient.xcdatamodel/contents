@@ -4,6 +4,7 @@
         <attribute name="feedDescription" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="feedLink" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="feedTitle" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="feedUri" optional="YES" attributeType="String" syncable="YES"/>
         <relationship name="feedItems" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="RssItem" inverseName="itemFeed" inverseEntity="RssItem" syncable="YES"/>
     </entity>
     <entity name="RssItem" representedClassName="RssItem" syncable="YES" codeGenerationType="class">
@@ -14,7 +15,7 @@
         <relationship name="itemFeed" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="RssFeed" inverseName="feedItems" inverseEntity="RssFeed" syncable="YES"/>
     </entity>
     <elements>
-        <element name="RssFeed" positionX="-344" positionY="-18" width="128" height="105"/>
+        <element name="RssFeed" positionX="-344" positionY="-18" width="128" height="120"/>
         <element name="RssItem" positionX="-54" positionY="18" width="128" height="120"/>
     </elements>
 </model>

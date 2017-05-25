@@ -9,20 +9,35 @@
 import UIKit
 import CoreData
 
-class FeedsViewController: UITableViewController, NSFetchedResultsControllerDelegate {
+class FeedsViewController: UITableViewController, NSFetchedResultsControllerDelegate, UISearchBarDelegate, UISearchControllerDelegate, UISearchResultsUpdating {
     
-    // Контекст базы данных
+    /// Контекст базы данных
     let managedObjectContext = AppAssist.shared.managedObjectContext
     
-    // Контроллер базы данных
+    /// Контроллер базы данных
     var _fetchedResultsController: NSFetchedResultsController<RssFeed>?
+    
+    /// Search controller to help us with filtering
+    var searchController: UISearchController!
 
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // Конфигурируем контроллер поиска
+        searchController = UISearchController(searchResultsController: UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "SearchViewController"))
+        searchController.searchResultsUpdater = self
+        searchController.searchBar.sizeToFit()
+        searchController.searchBar.delegate = self
+        searchController.delegate = self
+        
+        // Конфигурируем текущий контроллер
+        definesPresentationContext = true
         
         // Конфигурируем таблицу
         tableView.estimatedRowHeight = 44
         tableView.rowHeight = UITableViewAutomaticDimension
+        tableView.tableHeaderView = searchController.searchBar
         
         // Добавляем тестовые каналы
         AppAssist.shared.parseFeed(URL(string: "https://news.rambler.ru/rss/head/")!)
@@ -30,6 +45,7 @@ class FeedsViewController: UITableViewController, NSFetchedResultsControllerDele
         AppAssist.shared.parseFeed(URL(string: "https://news.rambler.ru/rss/world/")!)
         AppAssist.shared.parseFeed(URL(string: "https://lenta.ru/rss")!)
         AppAssist.shared.parseFeed(URL(string: "https://news.yandex.ru/gadgets.rss")!)
+        
     }
     
     deinit {
@@ -47,7 +63,7 @@ class FeedsViewController: UITableViewController, NSFetchedResultsControllerDele
             // Буфер обмена содержит корректную ссылку
             // Готовим запрос к базе данных
             let fetchRequest: NSFetchRequest<RssFeed> = RssFeed.fetchRequest()
-            fetchRequest.predicate = NSPredicate(format: "feedLink == %@", objectUrl.absoluteString)
+            fetchRequest.predicate = NSPredicate(format: "feedUri == %@", objectUrl.absoluteString)
             
             // Проверяем наличие подобного канала в базе данных
             if let object = try? managedObjectContext.count(for: fetchRequest), object == 0 {
@@ -147,6 +163,44 @@ class FeedsViewController: UITableViewController, NSFetchedResultsControllerDele
     }
     */
 
+    
+    // MARK: - UISearchBarDelegate
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.resignFirstResponder()
+    }
+    
+    
+    // MARK: - UISearchControllerDelegate
+    
+    func presentSearchController(_ searchController: UISearchController) {
+        //debugPrint("UISearchControllerDelegate invoked method: \(__FUNCTION__).")
+    }
+    
+    func willPresentSearchController(_ searchController: UISearchController) {
+        //debugPrint("UISearchControllerDelegate invoked method: \(__FUNCTION__).")
+    }
+    
+    func didPresentSearchController(_ searchController: UISearchController) {
+        //debugPrint("UISearchControllerDelegate invoked method: \(__FUNCTION__).")
+    }
+    
+    func willDismissSearchController(_ searchController: UISearchController) {
+        //debugPrint("UISearchControllerDelegate invoked method: \(__FUNCTION__).")
+    }
+    
+    func didDismissSearchController(_ searchController: UISearchController) {
+        //debugPrint("UISearchControllerDelegate invoked method: \(__FUNCTION__).")
+    }
+    
+    // MARK: - UISearchResultsUpdating
+    
+    func updateSearchResults(for searchController: UISearchController) {
+        if let controller = searchController.searchResultsController as? SearchViewController {
+            controller.searchString = searchController.searchBar.text!.trimmingCharacters(in: CharacterSet.whitespaces)
+        }
+    }
+    
     
     // MARK: - Navigation
 

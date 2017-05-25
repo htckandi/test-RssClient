@@ -43,11 +43,11 @@ class AppAssist: NSObject {
         if let result = try? managedObjectContext.fetch(fetchRequest), let objects = result as? [RssFeed] {
             
             // Получаем ссылки на существующие каналы
-            let feedsLinks = objects.flatMap{ $0.feedLink }
+            let feedsUris = objects.flatMap{ $0.feedUri }
             
             // Обрабатываем каждый существующий канал
-            for feedLink in feedsLinks {
-                parseFeed(URL(string: feedLink)!)
+            for feedUri in feedsUris {
+                parseFeed(URL(string: feedUri)!)
             }
         }
     }

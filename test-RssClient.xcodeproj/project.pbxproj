@@ -20,6 +20,8 @@
 		146C30F51ED1FA8A00DCBEB9 /* AppAssist.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146C30F41ED1FA8A00DCBEB9 /* AppAssist.swift */; };
 		146C311A1ED2041200DCBEB9 /* AppDefaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146C31191ED2041200DCBEB9 /* AppDefaults.swift */; };
 		146C31241ED2187900DCBEB9 /* AppExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 146C31231ED2187900DCBEB9 /* AppExtensions.swift */; };
+		14FF5AA21ED6C671001B1243 /* SearchViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FF5AA11ED6C671001B1243 /* SearchViewCell.swift */; };
+		14FF5AA41ED6C682001B1243 /* SearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FF5AA31ED6C682001B1243 /* SearchViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -38,6 +40,8 @@
 		146C30F41ED1FA8A00DCBEB9 /* AppAssist.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppAssist.swift; sourceTree = "<group>"; };
 		146C31191ED2041200DCBEB9 /* AppDefaults.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDefaults.swift; sourceTree = "<group>"; };
 		146C31231ED2187900DCBEB9 /* AppExtensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppExtensions.swift; sourceTree = "<group>"; };
+		14FF5AA11ED6C671001B1243 /* SearchViewCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchViewCell.swift; sourceTree = "<group>"; };
+		14FF5AA31ED6C682001B1243 /* SearchViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,11 +74,13 @@
 		14664ABF1EC6C5A800FC8E2B /* test-RssClient */ = {
 			isa = PBXGroup;
 			children = (
-				1416C42A1ED3818800E5A0FA /* FeedParseOperation.swift */,
+				14FF5AA31ED6C682001B1243 /* SearchViewController.swift */,
+				14FF5AA11ED6C671001B1243 /* SearchViewCell.swift */,
 				143EB8021ED2D9F600BE2272 /* ItemsViewController.swift */,
 				143EB8041ED2DA0600BE2272 /* ItemsViewCell.swift */,
 				14664AD51EC6C8FA00FC8E2B /* FeedsViewController.swift */,
 				14664AD71EC6C91E00FC8E2B /* FeedsViewCell.swift */,
+				1416C42A1ED3818800E5A0FA /* FeedParseOperation.swift */,
 				146C31231ED2187900DCBEB9 /* AppExtensions.swift */,
 				146C31191ED2041200DCBEB9 /* AppDefaults.swift */,
 				146C30F41ED1FA8A00DCBEB9 /* AppAssist.swift */,
@@ -167,6 +173,8 @@
 				146C31241ED2187900DCBEB9 /* AppExtensions.swift in Sources */,
 				143EB8031ED2D9F600BE2272 /* ItemsViewController.swift in Sources */,
 				143EB8051ED2DA0600BE2272 /* ItemsViewCell.swift in Sources */,
+				14FF5AA41ED6C682001B1243 /* SearchViewController.swift in Sources */,
+				14FF5AA21ED6C671001B1243 /* SearchViewCell.swift in Sources */,
 				146C30F51ED1FA8A00DCBEB9 /* AppAssist.swift in Sources */,
 				14664AC11EC6C5A800FC8E2B /* AppDelegate.swift in Sources */,
 				1416C42B1ED3818800E5A0FA /* FeedParseOperation.swift in Sources */,

@@ -25,8 +25,9 @@ class FeedParseOperation: Operation, XMLParserDelegate {
     class FeedObject: NSObject {
         
         var feedTitle: String?
-        var feedLink: String?
+        var feedUri: String?
         var feedDescription: String?
+        var feedLink: String?
         var feedItems = [ItemObject]()
     }
     
@@ -127,7 +128,7 @@ class FeedParseOperation: Operation, XMLParserDelegate {
         
         // Готовим запрос к базе данных
         let fetchRequest: NSFetchRequest<RssFeed> = RssFeed.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "feedLink == %@", name!)
+        fetchRequest.predicate = NSPredicate(format: "feedUri == %@", name!)
         
         // Ищем подобный канал в базе данных
         if let objects = try? _operationMoc.fetch(fetchRequest), let object = objects.first {
@@ -145,7 +146,7 @@ class FeedParseOperation: Operation, XMLParserDelegate {
         
         // Вносим в контекст новый канал
         let newFeed = RssFeed(context: _operationMoc)
-        newFeed.feedLink = name
+        newFeed.feedUri = name
         
         return newFeed
     }
@@ -156,6 +157,7 @@ class FeedParseOperation: Operation, XMLParserDelegate {
         // Обновляем информацию канала
         rssFeed.feedDescription = _operationFeed.feedDescription
         rssFeed.feedTitle = _operationFeed.feedTitle
+        rssFeed.feedLink = _operationFeed.feedLink
         
         // Готовим массивы существующих элементов канала
         let itemsEntities = Array(rssFeed.feedItems as? Set<RssItem> ?? Set<RssItem>())
@@ -236,22 +238,22 @@ class FeedParseOperation: Operation, XMLParserDelegate {
     
     func parser(_ parser: XMLParser, didEndElement elementName: String, namespaceURI: String?, qualifiedName qName: String?) {
         
-        if let objectRssFeed = feedObject {
+        if let objectFeed = feedObject {
             
-            if let objectRssItem = itemObject {
+            if let objectItem = itemObject {
                 
                 switch elementName {
                 case "item", "entry":
-                    objectRssFeed.feedItems.append(objectRssItem)
+                    objectFeed.feedItems.append(objectItem)
                     itemObject = nil
                 case "title":
-                    objectRssItem.itemTitle = objectString.trimmed
+                    objectItem.itemTitle = objectString.trimmed
                 case "description":
-                    objectRssItem.itemDescription = objectString.trimmed
+                    objectItem.itemDescription = objectString.trimmed
                 case "link":
-                    objectRssItem.itemLink = objectString.trimmed
+                    objectItem.itemLink = objectString.trimmed
                 case "pubDate":
-                    objectRssItem.itemPubDate = objectString.trimmed
+                    objectItem.itemPubDate = objectString.trimmed
                 default:
                     break
                 }
@@ -260,9 +262,11 @@ class FeedParseOperation: Operation, XMLParserDelegate {
                 
                 switch elementName {
                 case "title":
-                    objectRssFeed.feedTitle = objectString.trimmed
+                    objectFeed.feedTitle = objectString.trimmed
                 case "description":
-                    objectRssFeed.feedDescription = objectString.trimmed
+                    objectFeed.feedDescription = objectString.trimmed
+                case "link":
+                    objectFeed.feedLink = objectString.trimmed
                 default:
                     break
                 }
